@@ -91,4 +91,13 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
         dishFlavorService.saveBatch(flavors);
     }
+
+    @Override
+    public void remove(Long id) {
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //添加查询条件，根据分类id进行查询
+        dishLambdaQueryWrapper.eq(Dish::getCategoryId,id);
+        //正常删除分类
+        super.removeById(id);
+    }
 }

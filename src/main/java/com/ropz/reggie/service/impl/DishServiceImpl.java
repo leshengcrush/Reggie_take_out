@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,9 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
 
     @Autowired
     private DishFlavorService dishFlavorService;
+
+    @Autowired
+    private DishService dishService;
     /**
      * 新增菜品，同时保存对应口味
      * @param dishDto
@@ -92,12 +97,25 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
         dishFlavorService.saveBatch(flavors);
     }
 
+    /**
+     * 菜品批量启售、禁售
+     * @param status
+     * @param ids
+     */
     @Override
-    public void remove(Long id) {
-        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        //添加查询条件，根据分类id进行查询
-        dishLambdaQueryWrapper.eq(Dish::getCategoryId,id);
-        //正常删除分类
-        super.removeById(id);
+    public void updateDishStatus(Integer status, List<Long> ids) {
+        if (status != null && ids != null){
+            //新建一个数组存放status和ids
+            List<Dish> dishList = new ArrayList<>();
+            for (Long id : ids) {
+                Dish dish = new Dish();//在循环中创建对象,那样可以保证对象是单例的.
+                dish.setId(id);
+                dish.setStatus(status);
+                dishList.add(dish);
+            }
+            dishService.updateBatchById(dishList);
+        }
     }
+
+
 }

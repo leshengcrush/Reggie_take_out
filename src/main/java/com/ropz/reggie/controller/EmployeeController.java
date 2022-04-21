@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Slf4j
-@RestController
+@RestController//返回对象，对象数据直接以 JSON 或 XML 形式写入 HTTP 响应(Response)中，这种情况属于 RESTful Web服务
 @RequestMapping("/employee")
 public class EmployeeController {
 
@@ -135,7 +135,7 @@ public class EmployeeController {
      * @return
      */
     @PutMapping
-    public R<String > update(HttpServletRequest request,@RequestBody Employee employee){
+    public R<String> update(HttpServletRequest request,@RequestBody Employee employee){
         log.info(employee.toString());
 
         Long empId = (Long) request.getSession().getAttribute("employee");

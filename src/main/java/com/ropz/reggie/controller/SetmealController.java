@@ -3,6 +3,7 @@ package com.ropz.reggie.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ropz.reggie.common.R;
+import com.ropz.reggie.dto.DishDto;
 import com.ropz.reggie.dto.SetmealDto;
 import com.ropz.reggie.entity.Category;
 import com.ropz.reggie.entity.Setmeal;
@@ -13,6 +14,8 @@ import com.ropz.reggie.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -43,6 +46,7 @@ public class SetmealController {
      * @return
      */
     @PostMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)//删除该分类下所有缓存
     public R<String> save(@RequestBody SetmealDto setmealDto){
         log.info("套餐信息：{}",setmealDto);
         setmealService.saveWithDish(setmealDto);
@@ -63,9 +67,9 @@ public class SetmealController {
         Page<SetmealDto> dtoPage = new Page<>();
 
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
-        //查询条件,like模糊查询name
-        queryWrapper.like(name != name,Setmeal::getName,name);
-        //排序条件
+        //添加查询条件，根据name进行like模糊查询
+        queryWrapper.like(name != null,Setmeal::getName,name);
+        //添加排序条件，根据更新时间降序排列
         queryWrapper.orderByDesc(Setmeal::getUpdateTime);
 
         setmealService.page(pageInfo,queryWrapper);
@@ -78,7 +82,7 @@ public class SetmealController {
         List<SetmealDto> list = records.stream().map((item -> {
             //对象拷贝
             SetmealDto setmealDto = new SetmealDto();
-            BeanUtils.copyProperties(item, setmealDto);
+            BeanUtils.copyProperties(item,setmealDto);
 
             //分类id
             Long categoryId = item.getCategoryId();
@@ -104,6 +108,7 @@ public class SetmealController {
      * @return
      */
     @DeleteMapping
+    @CacheEvict(value = "setmealCache",allEntries = true)//删除该分类下所有缓存
     public R<String> delete(@RequestParam List<Long> ids){
         log.info("ids:{}",ids);
 
@@ -118,6 +123,7 @@ public class SetmealController {
      * @return
      */
     @GetMapping("/list")
+    @Cacheable(value = "setmealCache", key = "#setmeal.categoryId + '_' + #setmeal.status")//缓存注解
     public R<List<Setmeal>> list(Setmeal setmeal){
 
         LambdaQueryWrapper<Setmeal> queryWrapper = new LambdaQueryWrapper<>();
@@ -128,5 +134,52 @@ public class SetmealController {
         List<Setmeal> list = setmealService.list(queryWrapper);
 
         return R.success(list);
+    }
+
+
+    /**
+     * 批量启售用，启用
+     * @param status
+     * @param ids
+     * @return
+     */
+    @PostMapping("/status/{status}")
+    @CacheEvict(value = "setmealCache",allEntries = true)//删除该分类下所有缓存
+    public R<String> updateStatus(@PathVariable Integer status,@RequestParam List<Long> ids){
+
+        setmealService.updateSetmealStatus(status,ids);
+
+        return R.success("操作成功");
+    }
+
+
+
+    /**
+     * 根据id查询套餐信息，展示在修改页面
+     * @param id
+     * @return
+     */
+    @GetMapping("/{id}")
+    @Cacheable(value = "setmealCache", key = "#setmeal.categoryId + '_' + #setmeal.status")//缓存注解
+    public R<SetmealDto> get(@PathVariable Long id){
+
+        SetmealDto setmealDto = setmealService.getByIdWithSetmeal(id);
+
+        return R.success(setmealDto);
+    }
+
+    /**
+     * 更新修改套餐
+     * @param setmealDto
+     * @return
+     */
+    @PutMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)//删除该分类下所有缓存
+    public R<String> update(@RequestBody SetmealDto setmealDto){
+        log.info(setmealDto.toString());
+
+        setmealService.updateSetmeal(setmealDto);
+
+        return R.success("更新菜品成功");
     }
 }

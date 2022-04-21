@@ -26,7 +26,7 @@ public class CategoryController {
      * @return
      */
     @PostMapping
-    public R<String > save(@RequestBody Category category){
+    public R<String> save(@RequestBody Category category){
         log.info("category: {}",category);
         categoryService.save(category);
         return R.success("新增分类成功");

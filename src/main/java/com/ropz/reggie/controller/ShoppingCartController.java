@@ -105,4 +105,40 @@ public class ShoppingCartController {
         return R.success("清空成功");
     }
 
+
+    /**
+     * 删减购物车
+     * @param shoppingCart
+     * @return
+     */
+    @PostMapping("/sub")
+    public R<ShoppingCart> subtract(@RequestBody ShoppingCart shoppingCart){
+        log.info("购物车删减物品");
+        //1.查询当前用户购物车是否存在菜品,将用户的id从threadLocal获取
+        shoppingCart.setUserId(BaseContext.getCurrentId());
+        //2.根据Id查询购物车
+        LambdaQueryWrapper<ShoppingCart> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ShoppingCart::getUserId,shoppingCart.getUserId());
+        //3.判断删除菜品还是套餐，如果菜品不为空
+        if (shoppingCart.getDishId() != null){
+            //获取菜品id
+            queryWrapper.eq(ShoppingCart::getDishId,shoppingCart.getDishId());
+        }else {
+            //获取套餐id
+            queryWrapper.eq(ShoppingCart::getSetmealId,shoppingCart.getSetmealId());
+        }
+        //用户id是唯一，调用getOne得到ShoppingCart对象
+        ShoppingCart cart = shoppingCartService.getOne(queryWrapper);
+        //4.判断购物车数量
+        if (cart.getNumber() == 1){
+            //如果购物车数量为1, 则直接删除购物车
+            shoppingCartService.remove(queryWrapper);
+            cart = shoppingCart;
+        }else {
+            //购物车数量不为1
+            cart.setNumber(cart.getNumber()-1);
+            shoppingCartService.updateById(cart);
+        }
+        return R.success(cart);
+    }
 }

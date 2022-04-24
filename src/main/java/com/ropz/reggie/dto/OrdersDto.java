@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class OrdersDto extends Orders {
 
+    //用户
     private String userName;
 
     private String phone;

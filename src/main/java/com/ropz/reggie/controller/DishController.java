@@ -188,6 +188,7 @@ public class DishController {
      */
     @GetMapping("/list")
     public R<List<DishDto>> list(Dish dish){
+
         List<DishDto> dishDtoList  = null;
         String key = "dish_" + dish.getCategoryId() + "_" + dish.getStatus();
 
@@ -241,7 +242,7 @@ public class DishController {
     }
 
     /**
-     * 删除菜品
+     * 批量/删除菜品
      * @param ids
      * @return
      */
@@ -277,7 +278,7 @@ public class DishController {
     @PostMapping("/status/{status}")
     @CacheEvict(value = "dishCache",allEntries = true)
     public R<String> updateStatus(@PathVariable Integer status,@RequestParam List<Long> ids){
-
+        log.info("批量启售用，启用");
         dishService.updateDishStatus(status,ids);
 
         return R.success("操作成功");

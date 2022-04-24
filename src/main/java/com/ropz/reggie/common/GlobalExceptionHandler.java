@@ -15,7 +15,7 @@ import java.sql.SQLIntegrityConstraintViolationException;
  */
 
 @Slf4j
-@ControllerAdvice(annotations = {RestController.class, Controller.class})
+@ControllerAdvice(annotations = {RestController.class, Controller.class})//匹配有该注解的类
 @ResponseBody
 public class GlobalExceptionHandler {
 
@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
      * @param exception
      * @return
      */
-    @ExceptionHandler(SQLIntegrityConstraintViolationException.class)
+    @ExceptionHandler(SQLIntegrityConstraintViolationException.class)//处理指定异常
     public R<String> exceptionHandler(SQLIntegrityConstraintViolationException exception){
         log.error(exception.getMessage());
 
